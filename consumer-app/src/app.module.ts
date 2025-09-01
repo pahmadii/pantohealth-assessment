@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
 import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
+import { SignalsModule } from './signals/signals.module';
 
 @Module({
   imports: [
@@ -17,6 +18,8 @@ import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 
     // ماژول RabbitMQ
     RabbitmqModule,
+
+    SignalsModule,
   ],
 })
 export class AppModule {}
