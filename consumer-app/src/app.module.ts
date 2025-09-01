@@ -5,8 +5,17 @@ import { RabbitmqModule } from './rabbitmq/rabbitmq.module';
 
 @Module({
   imports: [
-    ConfigModule.forRoot(),
-    MongooseModule.forRoot(process.env.MONGODB_URI || ''),
+    // فعال کردن ConfigModule برای استفاده از .env
+    ConfigModule.forRoot({
+      isGlobal: true, // اینطوری تو همه جای پروژه بدون import اضافه قابل استفاده‌ست
+    }),
+
+    // اتصال به MongoDB
+    MongooseModule.forRoot(
+      process.env.MONGODB_URI || 'mongodb://localhost:27017/consumer-app',
+    ),
+
+    // ماژول RabbitMQ
     RabbitmqModule,
   ],
 })
