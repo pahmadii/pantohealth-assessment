@@ -5,7 +5,7 @@ import { ConfigModule } from '@nestjs/config';
 import { ProducerModule } from './producer/producer.module';
 
 @Module({
-  imports: [ConfigModule.forRoot(), ProducerModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), ProducerModule],
   controllers: [AppController],
   providers: [AppService],
 })
