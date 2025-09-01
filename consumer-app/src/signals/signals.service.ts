@@ -11,6 +11,7 @@ import { XRay } from './schemas/xray.schema';
 export class SignalsService {
   constructor(@InjectModel(XRay.name) private xrayModel: Model<XRay>) {}
 
+  // متد پردازش پیام RabbitMQ
   async processXRayMessage(message: any): Promise<void> {
     try {
       const data = JSON.parse(message.content.toString());
@@ -31,5 +32,37 @@ export class SignalsService {
       console.error('Error processing x-ray data:', error);
       throw error;
     }
+  }
+
+  // CRUD Methods
+
+  async create(xray: XRay): Promise<XRay> {
+    const newXRay = new this.xrayModel(xray);
+    return newXRay.save();
+  }
+
+  async findAll(): Promise<XRay[]> {
+    return this.xrayModel.find().exec();
+  }
+
+  async findOne(id: string): Promise<XRay | null> {
+    return this.xrayModel.findById(id).exec();
+  }
+
+  async update(id: string, updateXRay: XRay): Promise<XRay | null> {
+    return this.xrayModel
+      .findByIdAndUpdate(id, updateXRay, { new: true })
+      .exec();
+  }
+
+  async delete(id: string): Promise<any> {
+    return this.xrayModel.findByIdAndDelete(id).exec();
+  }
+
+  async filter(deviceId: string, startTime: number): Promise<XRay[]> {
+    const query: any = {};
+    if (deviceId) query['deviceId'] = deviceId;
+    if (startTime) query['time'] = { $gte: startTime };
+    return this.xrayModel.find(query).exec();
   }
 }
