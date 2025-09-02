@@ -24,6 +24,7 @@ export class RabbitmqService implements OnModuleInit {
         await channel.assertQueue('xray-queue', { durable: true });
         await channel.consume('xray-queue', async (msg) => {
           if (msg) {
+            console.log('Received message from queue:', msg.content.toString());
             await this.signalsService.processXRayMessage(msg);
             channel.ack(msg);
           }
