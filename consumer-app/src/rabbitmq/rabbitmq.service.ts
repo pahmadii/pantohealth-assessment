@@ -1,35 +1,41 @@
-/* eslint-disable @typescript-eslint/no-unsafe-assignment */
-/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-return */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+
 import { Injectable, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+import { Channel, Connection } from 'amqplib';
 import * as amqp from 'amqp-connection-manager';
-import { Channel } from 'amqplib';
-import { SignalsService } from 'src/signals/signals.service';
+import { SignalsService } from '../signals/signals.service';
 
 @Injectable()
 export class RabbitmqService implements OnModuleInit {
-  private connection;
-  private channel;
+  private connection: amqp.AmqpConnectionManager;
+  private channelWrapper: amqp.ChannelWrapper;
 
-  constructor(
-    private configService: ConfigService,
-    private signalsService: SignalsService,
-  ) {}
+  constructor(private signalsService: SignalsService) {}
 
   async onModuleInit() {
-    this.connection = amqp.connect([this.configService.get('RABBITMQ_URL')]);
-    this.channel = await this.connection.createChannel({
-      setup: async (channel: Channel) => {
-        await channel.assertQueue('xray-queue', { durable: true });
-        await channel.consume('xray-queue', async (msg) => {
-          if (msg) {
-            console.log('Received message from queue:', msg.content.toString());
-            await this.signalsService.processXRayMessage(msg);
-            channel.ack(msg);
-          }
-        });
+    this.connection = amqp.connect(['amqp://localhost']); // آدرس RabbitMQ
+    this.channelWrapper = this.connection.createChannel({
+      json: false,
+      setup: (channel: Channel) => {
+        return channel.assertQueue('xray_queue', { durable: true });
       },
     });
+
+    await this.channelWrapper.addSetup((channel: Channel) =>
+      channel.consume('xray_queue', async (msg) => {
+        if (msg) {
+          await this.handleMessage(msg);
+          channel.ack(msg);
+        }
+      }),
+    );
+  }
+
+  // متد واقعی برای پردازش پیام‌ها
+  async handleMessage(msg: any) {
+    await this.signalsService.processXRayMessage(msg);
   }
 }
