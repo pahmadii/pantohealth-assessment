@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { XRay } from './schemas/xray.schema';
@@ -20,20 +20,32 @@ export class SignalsService {
   }
 
   async findOne(id: string): Promise<XRay> {
-    return this.xrayModel.findById(id).exec();
+    const xray = await this.xrayModel.findById(id).exec();
+    if (!xray) {
+      // اگر چیزی پیدا نشد ارور بده
+      throw new NotFoundException(`XRay with id ${id} not found`);
+    }
+    return xray;
   }
 
   async update(id: string, updateXRay: XRay): Promise<XRay> {
-    return this.xrayModel
+    const xray = await this.xrayModel
       .findByIdAndUpdate(id, updateXRay, { new: true })
       .exec();
+    if (!xray) {
+      throw new NotFoundException(`XRay with id ${id} not found`);
+    }
+    return xray;
   }
 
-  async delete(id: string): Promise<any> {
-    return this.xrayModel.findByIdAndDelete(id).exec();
+  async delete(id: string): Promise<void> {
+    const xray = await this.xrayModel.findByIdAndDelete(id).exec();
+    if (!xray) {
+      throw new NotFoundException(`XRay with id ${id} not found`);
+    }
   }
 
-  async filter(deviceId: string, startTime: number): Promise<XRay[]> {
+  async filter(deviceId?: string, startTime?: number): Promise<XRay[]> {
     const query: any = {};
     if (deviceId) query.deviceId = deviceId;
     if (startTime) query.time = { $gte: startTime };
