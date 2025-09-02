@@ -4,12 +4,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SignalsService } from './signals.service';
 import { getModelToken } from '@nestjs/mongoose';
 import { XRay } from './schemas/xray.schema';
+import mongoose from 'mongoose';
 
 describe('SignalsService', () => {
   let service: SignalsService;
-  let mockXRayModel;
+  let mockXRayModel: any;
 
-  const sampleXRay = {
+  // نمونه داده برای تست
+  const sampleXRay: Partial<XRay> = {
+    _id: new mongoose.Types.ObjectId(),
     deviceId: '66bb584d4ae73e488c30a072',
     time: 1735683480000,
     dataLength: 3,
@@ -54,17 +57,74 @@ describe('SignalsService', () => {
 
   it('should create a new x-ray document', async () => {
     const result = await service.create(sampleXRay as XRay);
-    expect(mockXRayModel.create).toHaveBeenCalled();
+    expect(mockXRayModel.create).toHaveBeenCalledWith(
+      expect.objectContaining(sampleXRay),
+    );
     expect(result).toEqual(sampleXRay);
   });
 
   it('should process x-ray message', async () => {
     const message = {
       content: Buffer.from(
-        JSON.stringify({ [sampleXRay.deviceId]: sampleXRay }),
+        JSON.stringify({
+          [sampleXRay.deviceId!]: {
+            data: sampleXRay.data,
+            time: sampleXRay.time,
+          },
+        }),
       ),
     };
-    await service.processXRayMessage(message);
-    expect(mockXRayModel.create).toHaveBeenCalled();
+    const result = await service.processXRayMessage(message);
+    expect(mockXRayModel.create).toHaveBeenCalledWith(
+      expect.objectContaining({
+        deviceId: sampleXRay.deviceId,
+        time: sampleXRay.time,
+        dataLength: sampleXRay.dataLength,
+        dataVolume: expect.any(Number),
+        data: sampleXRay.data,
+      }),
+    );
+    expect(result).toEqual(sampleXRay);
+  });
+
+  it('should find all x-ray documents', async () => {
+    const result = await service.findAll();
+    expect(mockXRayModel.find).toHaveBeenCalled();
+    expect(result).toEqual([sampleXRay]);
+  });
+
+  it('should find one x-ray document by ID', async () => {
+    const result = await service.findOne('123');
+    expect(mockXRayModel.findById).toHaveBeenCalledWith('123');
+    expect(result).toEqual(sampleXRay);
+  });
+
+  it('should update an x-ray document', async () => {
+    const updateData: Partial<XRay> = { ...sampleXRay, dataLength: 301 };
+    const result = await service.update('123', updateData as XRay);
+    expect(mockXRayModel.findByIdAndUpdate).toHaveBeenCalledWith(
+      '123',
+      updateData,
+      { new: true },
+    );
+    expect(result).toEqual(sampleXRay);
+  });
+
+  it('should delete an x-ray document', async () => {
+    const result = await service.delete('123');
+    expect(mockXRayModel.findByIdAndDelete).toHaveBeenCalledWith('123');
+    expect(result).toBeNull();
+  });
+
+  it('should filter x-ray documents by deviceId and startTime', async () => {
+    const result = await service.filter(
+      '66bb584d4ae73e488c30a072',
+      1735683480000,
+    );
+    expect(mockXRayModel.find).toHaveBeenCalledWith({
+      deviceId: '66bb584d4ae73e488c30a072',
+      time: { $gte: 1735683480000 },
+    });
+    expect(result).toEqual([sampleXRay]);
   });
 });
