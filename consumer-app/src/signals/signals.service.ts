@@ -1,74 +1,81 @@
-/* eslint-disable @typescript-eslint/no-unsafe-call */
-/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable, NotFoundException } from '@nestjs/common';
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { Injectable, Logger } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { XRay } from './schemas/xray.schema';
+import { Channel } from 'amqplib';
 
 @Injectable()
 export class SignalsService {
-  constructor(@InjectModel(XRay.name) private xrayModel: Model<XRay>) {}
+  private readonly logger = new Logger(SignalsService.name);
 
-  async create(xray: XRay): Promise<XRay> {
-    return this.xrayModel.create(xray); // استفاده از create به جای new
-  }
+  constructor(@InjectModel(XRay.name) private xRayModel: Model<XRay>) {}
 
-  async findAll(): Promise<XRay[]> {
-    return this.xrayModel.find().exec();
-  }
+  async processXRayMessage(message: { content: Buffer }) {
+    try {
+      const rawData = JSON.parse(message.content.toString());
+      const deviceId = Object.keys(rawData)[0];
+      const { data, time } = rawData[deviceId];
 
-  async findOne(id: string): Promise<XRay> {
-    const xray = await this.xrayModel.findById(id).exec();
-    if (!xray) {
-      // اگر چیزی پیدا نشد ارور بده
-      throw new NotFoundException(`XRay with id ${id} not found`);
+      // Validate data
+      if (!deviceId || !data || !Array.isArray(data) || !time) {
+        throw new Error('Invalid x-ray data format');
+      }
+
+      // Calculate dataLength and dataVolume
+      const dataLength = data.length;
+      const dataVolume = Buffer.from(JSON.stringify(data)).length;
+
+      // Create x-ray document
+      const xRayData = {
+        deviceId,
+        time,
+        dataLength,
+        dataVolume,
+        data,
+      };
+
+      const xRay = await this.xRayModel.create(xRayData);
+      this.logger.log(`Processed and saved x-ray data for device ${deviceId}`);
+      return xRay;
+    } catch (error) {
+      this.logger.error(`Error processing x-ray message: ${error.message}`);
+      throw error;
     }
-    return xray;
   }
 
-  async update(id: string, updateXRay: XRay): Promise<XRay> {
-    const xray = await this.xrayModel
-      .findByIdAndUpdate(id, updateXRay, { new: true })
-      .exec();
-    if (!xray) {
-      throw new NotFoundException(`XRay with id ${id} not found`);
-    }
-    return xray;
-  }
-
-  async delete(id: string): Promise<void> {
-    const xray = await this.xrayModel.findByIdAndDelete(id).exec();
-    if (!xray) {
-      throw new NotFoundException(`XRay with id ${id} not found`);
+  async create(xRay: XRay) {
+    try {
+      return await this.xRayModel.create(xRay);
+    } catch (error) {
+      this.logger.error(`Error creating x-ray: ${error.message}`);
+      throw error;
     }
   }
 
-  async filter(deviceId?: string, startTime?: number): Promise<XRay[]> {
+  async findAll() {
+    return this.xRayModel.find().exec();
+  }
+
+  async findOne(id: string) {
+    return this.xRayModel.findById(id).exec();
+  }
+
+  async update(id: string, xRay: XRay) {
+    return this.xRayModel.findByIdAndUpdate(id, xRay, { new: true }).exec();
+  }
+
+  async delete(id: string) {
+    return this.xRayModel.findByIdAndDelete(id).exec();
+  }
+
+  async filter(deviceId: string, startTime: number) {
     const query: any = {};
     if (deviceId) query.deviceId = deviceId;
     if (startTime) query.time = { $gte: startTime };
-    return this.xrayModel.find(query).exec();
-  }
-
-  async processXRayMessage(message: any): Promise<void> {
-    try {
-      const data = JSON.parse(message.content.toString());
-      const deviceId = Object.keys(data)[0];
-      const { time, data: xrayData } = data[deviceId];
-
-      await this.xrayModel.create({
-        deviceId,
-        time,
-        dataLength: xrayData.length,
-        dataVolume: JSON.stringify(xrayData).length,
-        data: xrayData,
-      });
-      console.log('📩 Received message from queue:', data);
-    } catch (error) {
-      console.error('Error processing x-ray data:', error);
-      throw error;
-    }
+    return this.xRayModel.find(query).exec();
   }
 }

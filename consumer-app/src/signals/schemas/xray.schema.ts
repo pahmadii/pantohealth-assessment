@@ -9,14 +9,14 @@ export class XRay extends Document {
   @Prop({ required: true })
   time: number;
 
-  @Prop()
+  @Prop({ required: true })
   dataLength: number;
 
-  @Prop()
+  @Prop({ required: true })
   dataVolume: number;
 
-  @Prop({ type: Array })
-  data: Array<[number, [number, number, number]]>;
+  @Prop({ type: [[Number, [Number, Number, Number]]], required: true })
+  data: [number, [number, number, number]][];
 }
 
 export const XRaySchema = SchemaFactory.createForClass(XRay);
