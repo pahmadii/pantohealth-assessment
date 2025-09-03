@@ -20,6 +20,7 @@ export class ProducerService {
   async initialize() {
     try {
       const connection = await connect(this.configService.get('RABBITMQ_URL'));
+
       this.channel = await connection.createChannel();
       await this.channel.assertQueue('xray-queue', { durable: true });
       this.logger.log('Connected to RabbitMQ and queue asserted');
@@ -45,7 +46,7 @@ export class ProducerService {
 
       const dataLength = xRayData['66bb584d4ae73e488c30a072'].data.length;
       // Send to RabbitMQ
-      // eslint-disable-next-line prettier/prettier
+
       this.channel.sendToQueue(
         'xray-queue',
         Buffer.from(JSON.stringify(xRayData)),

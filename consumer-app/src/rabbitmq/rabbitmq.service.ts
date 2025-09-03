@@ -22,7 +22,7 @@ export class RabbitmqService {
 
   async initialize() {
     const rabbitmqUrl =
-      this.configService.get('RABBITMQ_URL') || 'amqp://localhost';
+      this.configService.get('RABBITMQ_URL') || 'amqp://rabbitmq:5672';
     const connection = await connect(rabbitmqUrl);
     this.channel = await connection.createChannel();
     await this.channel.assertQueue('xray-queue', { durable: true });
