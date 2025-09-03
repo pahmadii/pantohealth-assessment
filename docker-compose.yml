@@ -1,0 +1,62 @@
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    networks:
+      - panto-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "status"]
+      interval: 5s
+      retries: 5
+      timeout: 5s
+
+  mongodb:
+    image: mongo:6
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    networks:
+      - panto-network
+
+  producer:
+    build: ./producer-app
+    container_name: producer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - MONGODB_URI=${MONGODB_URI}
+    networks:
+      - panto-network
+    ports:
+      - "3001:3001"
+
+  consumer:
+    build: ./consumer-app
+    container_name: consumer
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      mongodb:
+        condition: service_started
+    environment:
+      - RABBITMQ_URL=${RABBITMQ_URL}
+      - MONGODB_URI=${MONGODB_URI}
+    networks:
+      - panto-network
+    ports:
+      - "3000:3000"
+
+networks:
+  panto-network:
+    driver: bridge
+
+
+
+
