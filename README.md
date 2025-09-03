@@ -95,7 +95,7 @@ The system processes x-ray data in the following JSON format, with up to 300 dat
     "data": [
       [762, [51.339764, 12.339223833333334, 1.2038000000000002]],
       [1766, [51.33977733333333, 12.339211833333334, 1.531604]],
-      // ... up to 300 data points
+      // ... up to 563 data points
     ],
     "time": 1735683480000
   }
