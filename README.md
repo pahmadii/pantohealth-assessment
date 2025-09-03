@@ -53,11 +53,11 @@ This project implements an IoT data management system for processing x-ray data 
      ```
 
 ## API Endpoints
-- **Swagger Documentation**: Access the API documentation at `http://localhost:3000/api`
+- **Swagger Documentation**: Access the API documentation at `http://localhost:3000/api` for consumer-app & `http://localhost:3001/api` producer-app
 - **Example Endpoint** (Producer):
   - Send sample x-ray data:
     ```bash
-    curl -X POST http://localhost:3001/producer/send
+    postman POST http://localhost:3001/producer/send
     ```
 - **Consumer Endpoints**:
   - `POST /signals`: Create a new x-ray signal
