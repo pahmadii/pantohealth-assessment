@@ -1,5 +1,5 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document } from 'mongoose';
+import { Document, Schema as MongooseSchema } from 'mongoose';
 
 @Schema()
 export class XRay extends Document {
@@ -15,8 +15,10 @@ export class XRay extends Document {
   @Prop({ required: true })
   dataVolume: number;
 
-  @Prop({ type: [[Number, [Number, Number, Number]]], required: true })
-  data: [number, [number, number, number]][];
+  // ❌ دیگه type: [[Number, [Number, Number, Number]]] استفاده نکن
+  // ✅ بذار Mixed باشه، تا mongoose گیر نده
+  @Prop({ type: [MongooseSchema.Types.Mixed], required: true })
+  data: any[];
 }
 
 export const XRaySchema = SchemaFactory.createForClass(XRay);
