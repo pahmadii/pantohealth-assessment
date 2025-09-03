@@ -34,12 +34,12 @@ This project implements an IoT data management system for processing x-ray data 
 3. **Configure Environment Variables**:
    - Create a `.env` file in `consumer-app`:
      ```env
-     MONGODB_URI=mongodb://localhost:27017/pantohealth
-     RABBITMQ_URL=amqp://localhost:5672
+     MONGODB_URI=mongodb://mongodb:27017/consumer-app
+     RABBITMQ_URI=amqp://rabbitmq:5672
      ```
    - Create a `.env` file in `producer-app`:
      ```env
-     RABBITMQ_URL=amqp://localhost:5672
+    RABBITMQ_URI=amqp://rabbitmq:5672
      ```
 
 4. **Run the Applications**:
