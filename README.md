@@ -88,7 +88,7 @@ To run the entire system (Consumer, Producer, RabbitMQ, MongoDB) using Docker Co
    - MongoDB: `localhost:27017`
 
 ## Sample Data
-The system processes x-ray data in the following JSON format, with up to 300 data points per message:
+The system processes x-ray data in the following JSON format, with up to 563 data points per message:
 ```json
 {
   "66bb584d4ae73e488c30a072": {
@@ -103,14 +103,14 @@ The system processes x-ray data in the following JSON format, with up to 300 dat
 ```
 
 ## Assumptions
-- Input x-ray data follows the provided JSON format with a single `deviceId` key, a `data` array of up to 300 `[time, [x-coord, y-coord, speed]]` entries, and a `time` timestamp.
+- Input x-ray data follows the provided JSON format with a single `deviceId` key, a `data` array of up to 563 `[time, [x-coord, y-coord, speed]]` entries, and a `time` timestamp.
 - `dataLength` is calculated as the number of entries in the `data` array (e.g., 300 for the provided sample).
 - `dataVolume` is calculated as the byte size of the JSON string of the `data` array.
 - RabbitMQ and MongoDB are running locally or accessible via the provided URLs in `.env` files.
 - Error handling is implemented for invalid JSON formats and database operations.
 
 ## Additional Notes
-- The project uses Git Flow for version control, with `main` for stable releases and `develop` for ongoing development.
+- The project uses Git Flow for version control, with `master` for stable releases and `develop` for ongoing development.
 - All dependencies are managed via npm, and the project is compatible with Node.js v18+.
 - The Consumer app includes robust error handling for data processing and database operations.
 - The Producer app sends the provided sample x-ray data to the RabbitMQ queue.
