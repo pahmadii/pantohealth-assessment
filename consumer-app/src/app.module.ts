@@ -13,10 +13,10 @@ import { SignalsModule } from './signals/signals.module';
 
     // اتصال به MongoDB
     MongooseModule.forRoot(
-      process.env.MONGODB_URI || 'mongodb://localhost:27017/consumer-app',
+      process.env.MONGODB_URI || 'mongodb://mongodb:27017/consumer-app',
     ),
 
-    // ماژول RabbitMQ
+    // ماژول RabbitMQx
     RabbitmqModule,
 
     SignalsModule,
